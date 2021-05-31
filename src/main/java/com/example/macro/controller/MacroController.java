@@ -20,6 +20,7 @@ public class MacroController {
 	@GetMapping(PREFIX_PATH + "/macro")
 	public MacroResponseDTO MacroResponseDTO(MacroRequestDTO dto) {
 		System.out.println("called");
+System.out.println("calle2");
 		return macroService.getMacro(dto);
 	}
 }
