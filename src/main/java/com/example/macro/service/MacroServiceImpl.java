@@ -1,7 +1,7 @@
 package com.example.macro.service;
 
-import com.example.macro.dto.WorldBankPopulateMacroDTO;
 import com.example.macro.model.Country;
+import com.example.macro.model.CountryMacro;
 import com.example.macro.repository.CountryRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,10 +11,7 @@ import org.springframework.stereotype.Service;
 import com.example.macro.dto.MacroRequestDTO;
 import com.example.macro.dto.MacroResponseDTO;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,29 +25,34 @@ public class MacroServiceImpl implements MacroService{
 
 	@Override
 	public MacroResponseDTO getMacro(MacroRequestDTO dto) {
-		List<Country> countries = new ArrayList<>();
 		MacroResponseDTO respDTO = new MacroResponseDTO();
-
-		Country countryEx = new Country();
-		countryEx.setName(dto.getCountryName());
-		Example<Country>  queryCountry = Example.of(countryEx);
-		Optional<Country> opt = countryRepository.findOne(queryCountry);
+		Optional<Country> opt = getCountry(dto.getCountryName());
 
 		if(!opt.isEmpty()) {
-			List<MacroResponseDTO.Macro> macrosDTO = opt.orElse(new Country())
-					.getMacros()
-					.stream()
-					.map(e -> {
-						MacroResponseDTO.Macro macroDTO = new MacroResponseDTO.Macro();
-						BeanUtils.copyProperties(e, macroDTO);
-						return macroDTO;
-					})
-					.collect(Collectors.toList());
-
-			macrosDTO.sort(Comparator.comparing(MacroResponseDTO.Macro::getYear));
+			List<MacroResponseDTO.Macro> macrosDTO = convertTOMacroDTOFrom(opt.get().getMacros());
 			respDTO = new MacroResponseDTO();
-			respDTO.setMacros(macrosDTO);
+			respDTO.setData(macrosDTO);
 		}
 		return respDTO;
+	}
+
+	public List<MacroResponseDTO.Macro> convertTOMacroDTOFrom(Set<CountryMacro> macros) {
+		List<MacroResponseDTO.Macro> macrosDTO = macros.stream()
+				.map(e -> {
+					MacroResponseDTO.Macro macroDTO = new MacroResponseDTO.Macro();
+					BeanUtils.copyProperties(e, macroDTO);
+					return macroDTO;
+				})
+				.collect(Collectors.toList());
+
+		macrosDTO.sort(Comparator.comparing(MacroResponseDTO.Macro::getYear));
+		return macrosDTO;
+	}
+
+	public Optional<Country> getCountry(String countryName) {
+		Country countryEx = new Country();
+		countryEx.setName(countryName);
+		Example<Country>  queryCountry = Example.of(countryEx);
+		return countryRepository.findOne(queryCountry);
 	}
 }
