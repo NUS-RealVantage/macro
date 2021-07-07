@@ -1,5 +1,8 @@
 package com.example.macro.dto;
 
-public class MacroRequestDTO {
+import lombok.Data;
 
+@Data
+public class MacroRequestDTO {
+    String countryName;
 }
