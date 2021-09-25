@@ -30,6 +30,9 @@ public class MacroDataPopulatorServiceImpl implements  MacroDataPopulatorService
     private final String CPI_SYMBOL = "FP.CPI.TOTL";
     private final String UNEMPLOYMENT_SYMBOL = "SL.UEM.TOTL.NE.ZS";
     private final String FDI_NET_INFLOW_SYMBOL = "BX.KLT.DINV.CD.WD";
+    private final String SALARIED_WORKERS = "SL.EMP.WORK.ZS";
+    private final String STARTING_YEAR = "1990";
+    private final String END_YEAR = "2030";
 
 
     @Autowired
@@ -50,8 +53,6 @@ public class MacroDataPopulatorServiceImpl implements  MacroDataPopulatorService
     private Map<String, List<WorldBankAPIResponseDTO>> getWorldBankRespDTOByCountry (String countryCodes) {
         String worldBankUrl = generateWorldBankUrl(countryCodes);
         List<WorldBankAPIResponseDTO> worldBankResponseDTOList = getDataFromWorldBank(worldBankUrl);
-        System.out.println(worldBankUrl);
-        System.out.println(worldBankResponseDTOList.size());
         Map<String, List<WorldBankAPIResponseDTO>> respDTOByCountry = worldBankResponseDTOList.stream()
                 .collect(Collectors.groupingBy(e -> e.getCountry().getId().toLowerCase()));
 
@@ -59,11 +60,14 @@ public class MacroDataPopulatorServiceImpl implements  MacroDataPopulatorService
     }
     private List<Country> getAllCountries() {
         List<Country> countryList = new ArrayList<>();
-        countryRepository.findAll().forEach( e-> {
-            if(e.getMacros().isEmpty()) {
-                countryList.add(e);
+
+        for(Country country: countryRepository.findAll()) {
+            if(!country.getMacros().isEmpty()) {
+                country.getMacros().removeAll(country.getMacros());
             }
-        });
+            countryList.add(country);
+        }
+
         return countryList;
     }
 
@@ -85,10 +89,14 @@ public class MacroDataPopulatorServiceImpl implements  MacroDataPopulatorService
         return countries.stream().map(e -> e.getIsoCode()).collect(Collectors.joining(";"));
     }
 
-    private String generateWorldBankUrl(String countryCodes) {
-        return "https://api.worldbank.org/v2/country/" +countryCodes+"/indicator" +
-                "/SP.POP.TOTL;FP.CPI.TOTL;NY.GDP.MKTP.CD;FR.INR.RINR" +
-                ";SL.UEM.TOTL.NE.ZS;FR.INR.RINR;FR.INR.DPST;FR.INR.LEND;BX.KLT.DINV.CD.WD?source=2&format=json&per_page=10000&date=1990:2030";
+    public String generateWorldBankUrl(String countryCodes) {
+
+        return String.format("https://api.worldbank.org/v2/country/%s/indicator/%s;%s;%s;%s;%s;%s;%s;%s;%s?source=2&format=json&per_page=10000&date=%s:%s",
+                countryCodes,POPULATION_SYMBOL, CPI_SYMBOL, GDP_SYMBOL, REAL_INTEREST_RATE_SYMBOL,
+                DEPOSIT_INTEREST_RATE_SYMBOL, LENDING_INTEREST_RATE_SYMBOL, UNEMPLOYMENT_SYMBOL,
+                FDI_NET_INFLOW_SYMBOL, SALARIED_WORKERS, STARTING_YEAR, END_YEAR);
+
+
     }
 
     private CountryMacro convertToCountryMacroFrom(Country country, String date, Map<String, BigDecimal> valueFromIndicatorId) {
@@ -103,6 +111,7 @@ public class MacroDataPopulatorServiceImpl implements  MacroDataPopulatorService
         macro.setDepositInterestRate(valueFromIndicatorId.get(DEPOSIT_INTEREST_RATE_SYMBOL));
         macro.setRealInterestRate(valueFromIndicatorId.get(REAL_INTEREST_RATE_SYMBOL));
         macro.setPopulation(valueFromIndicatorId.get(POPULATION_SYMBOL));
+        macro.setSalariedWorker(valueFromIndicatorId.get(SALARIED_WORKERS));
         return macro;
     }
 
@@ -118,8 +127,13 @@ public class MacroDataPopulatorServiceImpl implements  MacroDataPopulatorService
             result = reader.readValue(root.get(1));
 
         }catch(Exception e) {
-            System.out.println("exception");
+            e.printStackTrace();
         }
         return new ArrayList<>(new HashSet<>(result));
+    }
+
+    public static void main (String [] args) {
+        MacroDataPopulatorServiceImpl a = new MacroDataPopulatorServiceImpl();
+        a.generateWorldBankUrl("au");
     }
 }

@@ -27,6 +27,7 @@ public class CountryMacro {
     private BigDecimal unemployment;
     private BigDecimal fdi;
     private String year;
+    private BigDecimal salariedWorker;
 
     @ManyToOne
     @JoinColumn(name="country_id")
@@ -46,6 +47,7 @@ public class CountryMacro {
                 ", unemployment=" + unemployment +
                 ", fdi=" + fdi +
                 ", year='" + year + '\'' +
+                ", salariedWorker=" + salariedWorker +
                 ", country=" + country +
                 '}';
     }

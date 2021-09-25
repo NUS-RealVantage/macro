@@ -22,6 +22,6 @@ public class Country {
     private String name;
     private String isoCode;
 
-    @OneToMany(mappedBy="country", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy="country", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<CountryMacro> macros = new HashSet<>();
 }
