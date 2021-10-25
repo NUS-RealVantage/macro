@@ -23,7 +23,7 @@ the service currently retrieve data from https://data.worldbank.org, api endpoin
 ## How to
 the current guide is assuming:
 OS server: ubuntu
-remote server ip: 
+remote server ip: http://13.212.18.104/
 #### 1. run locally
 ```
 gradle bootRun
